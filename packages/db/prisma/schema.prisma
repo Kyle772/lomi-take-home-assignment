@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VersionStatus {
+  queued
+  extracting
+  extracted
+  failed
+}
+
+enum ReviewDecision {
+  approved
+  corrected
+}
+
+enum ValueSource {
+  extracted
+  manual
+}
+
+model Batch {
+  id        String     @id @default(cuid())
+  name      String
+  active    Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  documents Document[]
+
+  @@index([active])
+}
+
+model DocumentType {
+  id              String              @id @default(cuid())
+  key             String              @unique
+  label           String
+  schemaUpdatedAt DateTime            @default(now())
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  fields          DocumentTypeField[]
+  documents       Document[]
+}
+
+model DocumentTypeField {
+  id             String       @id @default(cuid())
+  documentTypeId String
+  documentType   DocumentType @relation(fields: [documentTypeId], references: [id], onDelete: Cascade)
+  fieldKey       String
+  fieldType      String       @default("string")
+  formatRules    Json         @default("[]")
+  sortOrder      Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([documentTypeId, fieldKey])
+  @@index([documentTypeId])
+}
+
+model Document {
+  id             String            @id @default(cuid())
+  batchId        String
+  batch          Batch             @relation(fields: [batchId], references: [id])
+  documentTypeId String
+  documentType   DocumentType      @relation(fields: [documentTypeId], references: [id])
+  title          String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  versions       DocumentVersion[]
+
+  @@index([documentTypeId])
+  @@index([batchId])
+}
+
+model DocumentVersion {
+  id                 String           @id @default(cuid())
+  documentId         String
+  document           Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  versionNumber      Int
+  status             VersionStatus    @default(queued)
+  storagePath        String
+  /** SHA-256 of the uploaded PDF bytes; used for cross-batch duplicate detection. */
+  contentHash        String?
+  parsedText         String?
+  failureReason      String?
+  extractedSchemaAt  DateTime?
+  /** When true, extraction does not copy prior reviews onto new values (fresh review). */
+  resetReviews       Boolean          @default(false)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  values             ExtractedValue[]
+  runs               ExtractionRun[]
+
+  @@unique([documentId, versionNumber])
+  @@index([status])
+  @@index([contentHash])
+}
+
+model ExtractedValue {
+  id              String           @id @default(cuid())
+  versionId       String
+  version         DocumentVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  fieldKey        String
+  value           String?
+  evidence        String?
+  gapReason       String?
+  certainty       Int              @default(0)
+  carriedOver     Boolean          @default(false)
+  source          ValueSource      @default(extracted)
+  adHoc           Boolean          @default(false)
+  previousValueId String?
+  previousValue   ExtractedValue?  @relation("ValueLineage", fields: [previousValueId], references: [id], onDelete: SetNull)
+  nextValues      ExtractedValue[] @relation("ValueLineage")
+  review          Review?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([versionId, fieldKey])
+  @@index([versionId])
+}
+
+model Review {
+  id             String         @id @default(cuid())
+  valueId        String         @unique
+  value          ExtractedValue @relation(fields: [valueId], references: [id], onDelete: Cascade)
+  decision       ReviewDecision
+  correctedValue String?
+  note           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model ExtractionRun {
+  id          String          @id @default(cuid())
+  versionId   String
+  version     DocumentVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  prompt      String
+  rawResponse String
+  outcome     String
+  error       String?
+  createdAt   DateTime        @default(now())
+
+  @@index([versionId])
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@lomi/eval",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test src/harness-eval.test.ts"
+  },
+  "dependencies": {
+    "@lomi/extraction": "workspace:*",
+    "@lomi/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

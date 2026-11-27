@@ -1,0 +1,33 @@
+{
+  "name": "@lomi/api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "worker": "tsx src/worker.ts",
+    "worker:start": "node dist/worker.js",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test src/carry-over.test.ts src/progress.test.ts"
+  },
+  "dependencies": {
+    "@lomi/db": "workspace:*",
+    "@lomi/extraction": "workspace:*",
+    "@lomi/shared": "workspace:*",
+    "bullmq": "^5.52.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "ioredis": "^5.6.1",
+    "multer": "^1.4.5-lts.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.18",
+    "@types/express": "^4.17.22",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
