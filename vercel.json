@@ -1,0 +1,50 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "api": {
+      "root": "apps/api",
+      "framework": "express",
+      "entrypoint": "src/index.ts",
+      "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @lomi/shared build && pnpm --filter @lomi/db exec prisma generate && pnpm --filter @lomi/extraction build && pnpm --filter @lomi/api build",
+      "functions": {
+        "src/index.ts": {
+          "maxDuration": 300,
+          "memory": 1024
+        }
+      }
+    },
+    "web": {
+      "root": "apps/web",
+      "framework": "nextjs",
+      "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+      "buildCommand": "cd ../.. && pnpm --filter @lomi/shared build && pnpm --filter @lomi/web build",
+      "bindings": [
+        {
+          "type": "service",
+          "service": "api",
+          "format": "url",
+          "env": "API_URL"
+        }
+      ]
+    }
+  },
+  "daemons": {
+    "worker": {
+      "root": ".",
+      "entrypoint": "apps/api/Dockerfile.worker",
+      "instances": { "iad1": 1 },
+      "terminationGracePeriodSeconds": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": { "service": "api" }
+    },
+    {
+      "source": "/(.*)",
+      "destination": { "service": "web" }
+    }
+  ]
+}
