@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3efe6;
+  --foreground: #1c2420;
+  --card: #fffdf8;
+  --muted: #5c6b63;
+  --border: #d5cdc0;
+  --accent: #0f6b5c;
+  --accent-foreground: #f5fffb;
+  --warn: #9a4d1c;
+  --danger: #8b2e2e;
+  --ok: #1f6b3a;
+  --surface: #e8e1d4;
+  --font-display: "Fraunces", "Times New Roman", serif;
+  --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --color-surface: var(--surface);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% 8%, #dce8e2 0%, transparent 42%),
+    radial-gradient(circle at 88% 0%, #efe4d2 0%, transparent 35%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  min-height: 100%;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/*
+ * Evidence highlight over rasterized PDF text (WCAG 2.0 AA-minded):
+ * - mix-blend-mode: multiply keeps black glyphs dark on the tint (text contrast)
+ * - solid amber fill tints white paper without washing ink to gray-yellow
+ * - dark outline ≥3:1 against paper for non-text focus indication
+ */
+.pdf-evidence-highlight {
+  background-color: #f5d000;
+  mix-blend-mode: multiply;
+  box-shadow:
+    inset 0 0 0 2px #5c4200,
+    0 0 0 1px #5c4200;
+  outline: 2px solid #5c4200;
+  outline-offset: 1px;
+}
