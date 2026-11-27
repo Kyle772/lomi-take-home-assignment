@@ -1,6 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import { applyDatabaseUrlEnv } from "./resolve-database-url.js";
 
 export * from "@prisma/client";
+export {
+  applyDatabaseUrlEnv,
+  resolveDatabaseUrl,
+  resolveDatabaseUrlUnpooled,
+} from "./resolve-database-url.js";
+
+applyDatabaseUrlEnv();
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 

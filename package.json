@@ -9,6 +9,7 @@
     "test": "turbo run test",
     "db:generate": "pnpm --filter @lomi/db generate",
     "db:migrate": "pnpm --filter @lomi/db migrate:deploy",
+    "db:migrate:vercel": "node packages/db/scripts/migrate-with-env.mjs",
     "db:seed": "pnpm --filter @lomi/db seed"
   },
   "devDependencies": {

@@ -145,3 +145,9 @@ Relative times are from the first chat of this session (**Fri Nov 27, 2026, 11:5
 **Choice:** Ship the Express service entry as `vercel-api.mjs` → esbuild-bundled `dist/vercel-api.mjs` (ESM). Do not rely on `"type":"module"` surviving into `/var/task`.
 
 **Why:** Production logs showed `SyntaxError: Cannot use import statement outside a module` on `/var/task/index.js` — Vercel flattened the function without our package.json module type. `.mjs` is always ESM.
+
+## D25 — Accept Neon-prefixed Vercel env names
+
+**Choice:** Resolve `DATABASE_URL` from `NEON_DATABASE_DATABASE_URL` / `NEON_DATABASE_POSTGRES_PRISMA_URL` (and unpooled variants for migrate). Redis accepts `REDIS_KV_URL`. `PUBLIC_API_URL` falls back to `https://$VERCEL_URL/api`.
+
+**Why:** The Neon Marketplace resource injects prefixed secrets, not plain `DATABASE_URL`, so Prisma would otherwise fail after a successful connect.

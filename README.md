@@ -91,16 +91,16 @@ Edge rewrites: `/api/*` → `api`, everything else → `web`. The web service bi
 ### One-time setup
 
 1. Import the monorepo in Vercel (root directory = repo root; do **not** set `apps/web`). Install uses `--prod=false` so TypeScript/Prisma stay available for workspace builds.
-2. **Neon** — Vercel Storage → Neon → connect. Copies `DATABASE_URL` (and usually `DATABASE_URL_UNPOOLED`) into the project. Run migrations once against Neon:
+2. **Neon** — Vercel Storage → Neon → create a **fresh** DB for this app and connect it. The integration may inject prefixed names (`NEON_DATABASE_DATABASE_URL`, `NEON_DATABASE_DATABASE_URL_UNPOOLED`, …). The API maps those to Prisma’s `DATABASE_URL` automatically. Run migrations once (prefer the **unpooled** URL):
    ```bash
-   DATABASE_URL='…neon…' pnpm --filter @lomi/db exec prisma migrate deploy
-   DATABASE_URL='…neon…' pnpm --filter @lomi/db exec tsx src/seed.ts   # optional
+   DATABASE_URL='…unpooled neon url…' pnpm db:migrate
+   DATABASE_URL='…' pnpm db:seed   # optional fixtures
    ```
-3. **Redis** — Upstash (or Redis) from the Vercel Marketplace. Set `REDIS_URL` for **api**, **web** (if needed), and the **worker** daemon.
+3. **Redis** — Upstash from the Marketplace. Accepts `REDIS_URL` or `REDIS_KV_URL`.
 4. **Blob** — Vercel Storage → Blob. Sets `BLOB_READ_WRITE_TOKEN` so uploads leave Function `/tmp` and the daemon can fetch PDFs.
-5. Set shared env on the project (all services + daemon):
-   - `OPENAI_API_KEY` / `OPENAI_MODEL` (optional; mock harness without a real key)
-   - `PUBLIC_API_URL` = `https://<your-deployment>/api`
+5. Optional shared env:
+   - `OPENAI_API_KEY` / `OPENAI_MODEL` (mock harness without a real key)
+   - `PUBLIC_API_URL` (defaults to `https://$VERCEL_URL/api` on Vercel)
    - Leave `NEXT_PUBLIC_API_URL` unset in production (browser uses same-origin `/api`).
 6. Deploy. Confirm the daemon shows as running in the Vercel dashboard.
 
