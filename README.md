@@ -12,7 +12,7 @@ docker compose up --build
 ```
 
 - Web: http://localhost:3000  
-- API: http://localhost:3001  
+- API: http://localhost:3001 (routes under `/api/...`)  
 - Host DB/Redis mapped to `localhost:5433` / `localhost:6380` (containers still use internal ports)
 
 Compose runs migrations, seeds **version 1** of the fixture documents, and starts API + worker + web. Open the queue, wait for extraction, then **Start / continue review**.
@@ -76,33 +76,40 @@ pnpm test
 
 Covers evidence validation, carry-over planning, progress counts, harness eval invariants.
 
-## Deploy
+## Deploy (Vercel)
 
-### Web (Vercel)
+Root [`vercel.json`](vercel.json) defines two **services** + one **daemon**:
 
-The Next.js app in `apps/web` is set up for Vercel. The Express API + BullMQ worker are **not** Vercel Functions (long-running Redis workers + local PDF disk) — host them separately (Docker, Railway, Fly, etc.) and point the web app at that API.
+| Unit | Role |
+|------|------|
+| `web` | Next.js UI (`apps/web`) |
+| `api` | Express (`apps/api`), public path `/api/*` |
+| `worker` daemon | BullMQ consumer (`apps/api/Dockerfile.worker`) |
 
-1. Import the GitHub repo in Vercel.
-2. Set **Root Directory** to `apps/web` (uses `apps/web/vercel.json`).
-3. Set env:
-   - `NEXT_PUBLIC_API_URL` = public HTTPS origin of your API (e.g. `https://api.example.com`)
-4. Deploy. CORS on the API must allow the Vercel web origin.
+Edge rewrites: `/api/*` → `api`, everything else → `web`. The web service binds `API_URL` to the api service for SSR.
 
-```bash
-# From apps/web after `vercel login`
-vercel link   # choose the monorepo project; root directory apps/web
-vercel env add NEXT_PUBLIC_API_URL
-vercel deploy --prod
-```
+### One-time setup
 
-### API + worker
+1. Import the monorepo in Vercel (root directory = repo root; do **not** set `apps/web`).
+2. **Neon** — Vercel Storage → Neon → connect. Copies `DATABASE_URL` (and usually `DATABASE_URL_UNPOOLED`) into the project. Run migrations once against Neon:
+   ```bash
+   DATABASE_URL='…neon…' pnpm --filter @lomi/db exec prisma migrate deploy
+   DATABASE_URL='…neon…' pnpm --filter @lomi/db exec tsx src/seed.ts   # optional
+   ```
+3. **Redis** — Upstash (or Redis) from the Vercel Marketplace. Set `REDIS_URL` for **api**, **web** (if needed), and the **worker** daemon.
+4. **Blob** — Vercel Storage → Blob. Sets `BLOB_READ_WRITE_TOKEN` so uploads leave Function `/tmp` and the daemon can fetch PDFs.
+5. Set shared env on the project (all services + daemon):
+   - `OPENAI_API_KEY` / `OPENAI_MODEL` (optional; mock harness without a real key)
+   - `PUBLIC_API_URL` = `https://<your-deployment>/api`
+   - Leave `NEXT_PUBLIC_API_URL` unset in production (browser uses same-origin `/api`).
+6. Deploy. Confirm the daemon shows as running in the Vercel dashboard.
 
-Keep using `docker compose` (or the same image on any container host) with `DATABASE_URL`, `REDIS_URL`, `OPENAI_API_KEY`, `UPLOAD_DIR`, and `PUBLIC_API_URL` (used in CSV `pdf_url` links).
+Local Docker remains the fastest path for day-to-day work (`docker compose up --build`).
 
 ## Cuts / next
 
-**Cut:** PDF page-image rendering, full Vercel-hosted API/worker, SSE, golden labeled evals.  
-**Next:** OCR for scans, better confidence calibration, quote bounding boxes, auth, object storage for PDFs.  
+**Cut:** PDF page-image rendering, SSE, golden labeled evals.  
+**Next:** OCR for scans, better confidence calibration, quote bounding boxes, auth.  
 **At 10k docs:** separate worker pool, extraction sharding, stronger idempotency / outbox, eval CI against golden set.
 
 ## Local dev (without full compose app build)

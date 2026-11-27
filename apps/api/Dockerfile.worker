@@ -1,0 +1,34 @@
+# BullMQ extraction daemon for Vercel Daemons (build context = monorepo root).
+FROM node:22-bookworm-slim AS base
+RUN corepack enable && apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+
+FROM base AS deps
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* turbo.json ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/db/package.json packages/db/
+COPY packages/extraction/package.json packages/extraction/
+COPY packages/eval/package.json packages/eval/
+COPY apps/api/package.json apps/api/
+RUN pnpm install --filter @lomi/api... --filter @lomi/db... --filter @lomi/shared... --filter @lomi/extraction...
+
+FROM deps AS build
+COPY packages/shared packages/shared
+COPY packages/db packages/db
+COPY packages/extraction packages/extraction
+COPY apps/api apps/api
+COPY fixtures fixtures
+ENV DATABASE_URL=postgresql://lomi:lomi@localhost:5432/lomi?schema=public
+RUN pnpm --filter @lomi/shared build \
+  && pnpm --filter @lomi/db exec prisma generate \
+  && pnpm --filter @lomi/db build \
+  && pnpm --filter @lomi/extraction build \
+  && pnpm --filter @lomi/api build
+
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV RUN_MODE=worker
+COPY --from=build /app /app
+WORKDIR /app/apps/api
+CMD ["node", "dist/worker.js"]

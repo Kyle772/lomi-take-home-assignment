@@ -1,4 +1,15 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+/**
+ * Browser: same-origin `/api` (Vercel rewrite) unless NEXT_PUBLIC_API_URL is set.
+ * Server: prefer service binding `API_URL`, then NEXT_PUBLIC, then `/api`.
+ */
+function resolveApiBase(): string {
+  const fromBinding = process.env.API_URL?.replace(/\/$/, "");
+  const fromPublic = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+  if (typeof window === "undefined" && fromBinding) return fromBinding;
+  return fromPublic || "/api";
+}
+
+const API_URL = resolveApiBase();
 
 export type ReviewInfo = {
   decision: "approved" | "corrected";

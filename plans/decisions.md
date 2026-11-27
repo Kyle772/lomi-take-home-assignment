@@ -133,3 +133,9 @@ Relative times are from the first chat of this session (**Fri Nov 27, 2026, 11:5
 **Choice:** Each `DocumentTypeField` stores an ordered `formatRules` JSON list (regex-gated transforms: ensure prefix/suffix/decimals, regex replace, date format). Money and date fields seed sensible defaults. Formatting runs at **read/export time** only (CSV + `formattedValue` on serialize) — never mutates stored `ExtractedValue.value`. Review UI continues to show raw/`effectiveValue`. Format-only edits do **not** bump `schemaUpdatedAt`, so they do not force re-extract.
 
 **Why:** Operators need `$` / `.00` / date layout consistency in cleaned handoff without re-running extraction or fighting independently skippable rules.
+
+## D23 — Vercel multi-service + Neon + Blob (+~150min)
+
+**Choice:** Single Vercel project with services `api` (Express) + `web` (Next.js), public rewrites `/api` → api and `/` → web, service binding `API_URL` for SSR, and a **Vercel Daemon** running the BullMQ worker image. Postgres via **Neon** (Vercel integration). PDFs via **Vercel Blob** when `BLOB_READ_WRITE_TOKEN` is set (Functions and Daemons do not share disk). Redis via Marketplace (Upstash) for the queue. Express mounts routes at both `/api` and `/` for rewrite + binding compatibility.
+
+**Why:** Keep deploy surface on one platform; Neon matches the existing Prisma schema; Blob is required so the daemon can read uploads that landed in a Function.

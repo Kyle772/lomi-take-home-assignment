@@ -9,7 +9,7 @@ COPY apps/web/package.json apps/web/
 RUN pnpm install --filter @lomi/web... --filter @lomi/shared...
 
 FROM deps AS build
-ARG NEXT_PUBLIC_API_URL=http://localhost:3001
+ARG NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV DOCKER_BUILD=1
 COPY packages/shared packages/shared
