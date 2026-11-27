@@ -9,5 +9,5 @@ cd /app/apps/api
 if [ "$RUN_MODE" = "worker" ]; then
   exec node dist/worker.js
 else
-  exec node dist/index.js
+  exec node dist/index.mjs
 fi
