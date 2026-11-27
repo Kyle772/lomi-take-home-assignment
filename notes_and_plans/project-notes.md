@@ -5,6 +5,8 @@
 | | |
 |---|---|
 | **Start** | 2026-11-27 20:04:55 UTC / 12:04:55 PST |
+| **End** | 2026-11-27 22:52:32 UTC / 14:52:32 PST | 
+| **Duration** | 2 hours 47 minutes 37 seconds |
 | **Deadline** | 2026-11-28 23:59 UTC |
 
 ## Demo click-path
