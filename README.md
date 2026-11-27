@@ -3,6 +3,7 @@
 Upload a PDF, and an LLM extracts structured fields with supporting evidence. A reviewer approves or corrects every value before it's trusted. When a revised PDF arrives, we run the extraction again and keep reviews where the evidence hasn't changed.
 
 Brief: [`ASSIGNMENT.md`](ASSIGNMENT.md). Decision log: [`notes_and_plans/decisions.md`](notes_and_plans/decisions.md).
+[`Gist`](https://gist.github.com/Kyle772/b1f522a59b4c11615c2239fc9dd525cd)
 
 ## How to run and what to click first
 
