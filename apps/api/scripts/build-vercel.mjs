@@ -4,9 +4,8 @@ import { mkdirSync } from "node:fs";
 mkdirSync("dist", { recursive: true });
 
 /**
- * Vercel packages the Express entry as /var/task/index.js without our
- * package.json `"type":"module"`, so a plain ESM .js graph crashes.
- * Bundle a single .mjs entry (always treated as ESM) instead.
+ * Bundle workspace + lightweight libs. Leave Express-stack CJS packages
+ * external (dynamic require). Side-effect imports in vercel-api.mjs ensure NFT.
  */
 await build({
   entryPoints: ["src/index.mts"],
@@ -16,7 +15,6 @@ await build({
   format: "esm",
   target: "node22",
   sourcemap: true,
-  // Keep heavy/native deps external; workspace packages are inlined.
   external: [
     "@prisma/client",
     "@vercel/blob",
@@ -25,8 +23,6 @@ await build({
     "express",
     "ioredis",
     "multer",
-    "openai",
-    "unpdf",
   ],
   logLevel: "info",
 });
