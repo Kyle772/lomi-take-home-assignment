@@ -5,8 +5,8 @@
       "root": "apps/api",
       "framework": "express",
       "entrypoint": "src/index.ts",
-      "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-      "buildCommand": "cd ../.. && pnpm --filter @lomi/shared build && pnpm --filter @lomi/db exec prisma generate && pnpm --filter @lomi/extraction build && pnpm --filter @lomi/api build",
+      "installCommand": "cd ../.. && pnpm install --frozen-lockfile --prod=false",
+      "buildCommand": "cd ../.. && pnpm --filter @lomi/shared build && pnpm --filter @lomi/db build && pnpm --filter @lomi/extraction build && pnpm --filter @lomi/api build",
       "functions": {
         "src/index.ts": {
           "maxDuration": 300,
@@ -17,7 +17,7 @@
     "web": {
       "root": "apps/web",
       "framework": "nextjs",
-      "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+      "installCommand": "cd ../.. && pnpm install --frozen-lockfile --prod=false",
       "buildCommand": "cd ../.. && pnpm --filter @lomi/shared build && pnpm --filter @lomi/web build",
       "bindings": [
         {
