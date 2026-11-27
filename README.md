@@ -76,11 +76,34 @@ pnpm test
 
 Covers evidence validation, carry-over planning, progress counts, harness eval invariants.
 
+## Deploy
+
+### Web (Vercel)
+
+The Next.js app in `apps/web` is set up for Vercel. The Express API + BullMQ worker are **not** Vercel Functions (long-running Redis workers + local PDF disk) — host them separately (Docker, Railway, Fly, etc.) and point the web app at that API.
+
+1. Import the GitHub repo in Vercel.
+2. Set **Root Directory** to `apps/web` (uses `apps/web/vercel.json`).
+3. Set env:
+   - `NEXT_PUBLIC_API_URL` = public HTTPS origin of your API (e.g. `https://api.example.com`)
+4. Deploy. CORS on the API must allow the Vercel web origin.
+
+```bash
+# From apps/web after `vercel login`
+vercel link   # choose the monorepo project; root directory apps/web
+vercel env add NEXT_PUBLIC_API_URL
+vercel deploy --prod
+```
+
+### API + worker
+
+Keep using `docker compose` (or the same image on any container host) with `DATABASE_URL`, `REDIS_URL`, `OPENAI_API_KEY`, `UPLOAD_DIR`, and `PUBLIC_API_URL` (used in CSV `pdf_url` links).
+
 ## Cuts / next
 
-**Cut:** PDF page-image rendering, live deploy, SSE, golden labeled evals.  
-**Next:** OCR for scans, better confidence calibration, quote bounding boxes, auth.  
-**At 10k docs:** separate worker pool, object storage for PDFs, extraction sharding, stronger idempotency keys / outbox, eval CI against golden set.
+**Cut:** PDF page-image rendering, full Vercel-hosted API/worker, SSE, golden labeled evals.  
+**Next:** OCR for scans, better confidence calibration, quote bounding boxes, auth, object storage for PDFs.  
+**At 10k docs:** separate worker pool, extraction sharding, stronger idempotency / outbox, eval CI against golden set.
 
 ## Local dev (without full compose app build)
 

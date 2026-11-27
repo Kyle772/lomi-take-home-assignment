@@ -120,7 +120,7 @@ export function ReviewWorkspace({
   }
 
   async function onNextDoc() {
-    const { document: next } = await getNextReview(doc.id);
+    const { document: next } = await getNextReview(doc.id, doc.batchId);
     if (next) router.push(`/review/${next.id}`);
     else router.push("/");
   }

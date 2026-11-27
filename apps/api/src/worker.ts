@@ -43,10 +43,20 @@ async function processExtraction(versionId: string): Promise<void> {
     return;
   }
 
-  await prisma.documentVersion.update({
-    where: { id: versionId },
+  // Atomic claim: only one worker may move queued/failed → extracting.
+  const claimed = await prisma.documentVersion.updateMany({
+    where: {
+      id: versionId,
+      status: { in: ["queued", "failed"] },
+    },
     data: { status: "extracting", failureReason: null },
   });
+  if (claimed.count === 0) {
+    console.log(
+      `Version ${versionId} already claimed or not claimable (status=${version.status}); skipping`,
+    );
+    return;
+  }
 
   try {
     const docType = version.document.documentType;

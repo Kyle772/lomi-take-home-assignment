@@ -2,7 +2,6 @@ import cors from "cors";
 import express from "express";
 import { config } from "./config.js";
 import { createRouter } from "./routes.js";
-import { reclaimOrphanedExtractions } from "./reclaim.js";
 
 async function main() {
   const app = express();
@@ -23,14 +22,7 @@ async function main() {
     },
   );
 
-  try {
-    const reclaimed = await reclaimOrphanedExtractions();
-    if (reclaimed > 0) {
-      console.log(`API boot reclaim enqueued ${reclaimed} job(s)`);
-    }
-  } catch (err) {
-    console.warn("Boot reclaim skipped:", err);
-  }
+  // Orphan job reclaim lives on the worker boot only (stable BullMQ job ids).
 
   app.listen(config.port, () => {
     console.log(`API listening on :${config.port}`);

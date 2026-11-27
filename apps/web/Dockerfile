@@ -11,6 +11,7 @@ RUN pnpm install --filter @lomi/web... --filter @lomi/shared...
 FROM deps AS build
 ARG NEXT_PUBLIC_API_URL=http://localhost:3001
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV DOCKER_BUILD=1
 COPY packages/shared packages/shared
 COPY apps/web apps/web
 RUN pnpm --filter @lomi/shared build && pnpm --filter @lomi/web build
