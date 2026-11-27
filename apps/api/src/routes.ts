@@ -26,11 +26,20 @@ import {
 } from "./serialize.js";
 import { isRemoteStoragePath, persistUploadedFile, readPdfBytes } from "./storage.js";
 
-mkdirSync(config.uploadDir, { recursive: true });
+function ensureUploadDir(): void {
+  mkdirSync(config.uploadDir, { recursive: true });
+}
 
 const upload = multer({
   storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, config.uploadDir),
+    destination: (_req, _file, cb) => {
+      try {
+        ensureUploadDir();
+        cb(null, config.uploadDir);
+      } catch (err) {
+        cb(err as Error, config.uploadDir);
+      }
+    },
     filename: (_req, file, cb) => {
       const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
       cb(null, `${Date.now()}-${randomUUID()}-${safe}`);

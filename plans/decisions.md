@@ -139,3 +139,9 @@ Relative times are from the first chat of this session (**Fri Nov 27, 2026, 11:5
 **Choice:** Single Vercel project with services `api` (Express) + `web` (Next.js), public rewrites `/api` → api and `/` → web, service binding `API_URL` for SSR, and a **Vercel Daemon** running the BullMQ worker image. Postgres via **Neon** (Vercel integration). PDFs via **Vercel Blob** when `BLOB_READ_WRITE_TOKEN` is set (Functions and Daemons do not share disk). Redis via Marketplace (Upstash) for the queue. Express mounts routes at both `/api` and `/` for rewrite + binding compatibility.
 
 **Why:** Keep deploy surface on one platform; Neon matches the existing Prisma schema; Blob is required so the daemon can read uploads that landed in a Function.
+
+## D24 — Vercel API entry is a bundled `.mjs` (+deploy)
+
+**Choice:** Ship the Express service entry as `vercel-api.mjs` → esbuild-bundled `dist/vercel-api.mjs` (ESM). Do not rely on `"type":"module"` surviving into `/var/task`.
+
+**Why:** Production logs showed `SyntaxError: Cannot use import statement outside a module` on `/var/task/index.js` — Vercel flattened the function without our package.json module type. `.mjs` is always ESM.

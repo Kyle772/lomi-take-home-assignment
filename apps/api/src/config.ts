@@ -8,7 +8,10 @@ export const config = {
   port: Number(process.env.API_PORT || 3001),
   databaseUrl: process.env.DATABASE_URL || "",
   redisUrl: process.env.REDIS_URL || "redis://localhost:6379",
-  uploadDir: process.env.UPLOAD_DIR || defaultUploadDir,
+  // Serverless only has a writable /tmp; ignore Docker-style UPLOAD_DIR on Vercel.
+  uploadDir: process.env.VERCEL
+    ? "/tmp/lomi-uploads"
+    : process.env.UPLOAD_DIR || defaultUploadDir,
   openaiApiKey: process.env.OPENAI_API_KEY || "",
   openaiModel: process.env.OPENAI_MODEL || "gpt-4o-mini",
   queueName: "document-extraction",
