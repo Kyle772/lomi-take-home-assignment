@@ -24,6 +24,7 @@ import {
   serializeDocumentType,
   type SerializedDocument,
 } from "./serialize.js";
+import { isRemoteStoragePath, persistUploadedFile, readPdfBytes } from "./storage.js";
 
 mkdirSync(config.uploadDir, { recursive: true });
 
@@ -692,7 +693,8 @@ export function createRouter(): Router {
       const createdIds: string[] = [];
       for (const file of files) {
         const title = String(req.body.title || file.originalname || "Untitled document");
-        const contentHash = await hashPdfFile(file.path);
+        const storagePath = await persistUploadedFile(file);
+        const contentHash = await hashPdfFile(storagePath);
         const document = await prisma.document.create({
           data: {
             batchId: targetBatch.id,
@@ -702,7 +704,7 @@ export function createRouter(): Router {
               create: {
                 versionNumber: 1,
                 status: "queued",
-                storagePath: file.path,
+                storagePath,
                 contentHash,
               },
             },
@@ -747,7 +749,8 @@ export function createRouter(): Router {
       }
 
       const nextNumber = (document.versions[0]?.versionNumber || 0) + 1;
-      await createVersionAndEnqueue(document.id, req.file.path, nextNumber);
+      const storagePath = await persistUploadedFile(req.file);
+      await createVersionAndEnqueue(document.id, storagePath, nextNumber);
 
       const full = await loadDocument(document.id);
       res.status(201).json(await serializeOneWithDuplicates(full!));
@@ -956,16 +959,28 @@ export function createRouter(): Router {
         res.status(404).json({ error: "Document not found" });
         return;
       }
-      if (!existsSync(version.storagePath)) {
-        res.status(404).json({ error: "PDF file missing on disk" });
-        return;
-      }
+
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
         "Content-Disposition",
         `inline; filename="${document.id}-v${version.versionNumber}.pdf"`,
       );
       res.setHeader("Cache-Control", "private, max-age=60");
+
+      if (isRemoteStoragePath(version.storagePath)) {
+        const bytes = await readPdfBytes(version.storagePath);
+        if (!bytes) {
+          res.status(404).json({ error: "PDF file missing in object storage" });
+          return;
+        }
+        res.send(bytes);
+        return;
+      }
+
+      if (!existsSync(version.storagePath)) {
+        res.status(404).json({ error: "PDF file missing on disk" });
+        return;
+      }
       createReadStream(version.storagePath).pipe(res);
     } catch (err) {
       next(err);
