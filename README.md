@@ -90,7 +90,7 @@ Edge rewrites: `/api/*` → `api`, everything else → `web`. The web service bi
 
 ### One-time setup
 
-1. Import the monorepo in Vercel (root directory = repo root; do **not** set `apps/web`).
+1. Import the monorepo in Vercel (root directory = repo root; do **not** set `apps/web`). Install uses `--prod=false` so TypeScript/Prisma stay available for workspace builds.
 2. **Neon** — Vercel Storage → Neon → connect. Copies `DATABASE_URL` (and usually `DATABASE_URL_UNPOOLED`) into the project. Run migrations once against Neon:
    ```bash
    DATABASE_URL='…neon…' pnpm --filter @lomi/db exec prisma migrate deploy
