@@ -4,8 +4,9 @@ import { mkdirSync } from "node:fs";
 mkdirSync("dist", { recursive: true });
 
 /**
- * Bundle workspace + lightweight libs. Leave Express-stack CJS packages
- * external (dynamic require). Side-effect imports in vercel-api.mjs ensure NFT.
+ * Fully bundle the API (including Express) into one ESM file.
+ * createRequire banner lets bundled CJS packages call require("path") etc.
+ * Prisma stays external — engines must be file-traced by Vercel NFT.
  */
 await build({
   entryPoints: ["src/index.mts"],
@@ -15,15 +16,16 @@ await build({
   format: "esm",
   target: "node22",
   sourcemap: true,
-  external: [
-    "@prisma/client",
-    "@vercel/blob",
-    "bullmq",
-    "cors",
-    "express",
-    "ioredis",
-    "multer",
-  ],
+  external: ["@prisma/client", ".prisma/*"],
+  banner: {
+    js: `import { createRequire as __lomiCreateRequire } from "node:module";
+import { fileURLToPath as __lomiFileURLToPath } from "node:url";
+import { dirname as __lomiDirname } from "node:path";
+const require = __lomiCreateRequire(import.meta.url);
+const __filename = __lomiFileURLToPath(import.meta.url);
+const __dirname = __lomiDirname(__filename);
+`,
+  },
   logLevel: "info",
 });
 
