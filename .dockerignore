@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+.git
+storage/uploads/*
+!.gitkeep
+.env
+.env.local
+*.log

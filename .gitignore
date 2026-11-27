@@ -1,0 +1,12 @@
+node_modules
+dist
+.next
+.turbo
+.env
+.env.local
+storage/uploads/*
+!storage/uploads/.gitkeep
+coverage
+*.log
+.DS_Store
+*.tsbuildinfo
